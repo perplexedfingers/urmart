@@ -8,27 +8,24 @@ class User(models):
 class Shop(models):
     @property
     def total_sale_gained(self):
-        sum_ = sum(product.price * detail.quantity
+        return sum(product.price * detail.quantity
                    for product in self.product_set.objects.all()
                    for detail in product.orderdetail_set.objects.all()
                    )
-        return sum_
 
     @property
     def total_orders_taken(self):
-        sum_ = sum(detail.order_set.objects.distinct().count()
+        return sum(detail.order_set.objects.distinct().count()
                    for product in self.product_set.objects.all()
                    for detail in product.orderdetail_set.objects.all()
                    )
-        return sum_
 
     @property
     def total_quantity_sold(self):
-        sum_ = sum(detail.quantity
+        return sum(detail.quantity
                    for product in self.product_set.objects.all()
                    for detail in product.orderdetail_set.objects.all()
                    )
-        return sum_
 
 
 class Product(models):
@@ -39,8 +36,7 @@ class Product(models):
 
     @property
     def ordered(self):
-        ordered_ = sum(detail.quantity for detail in self.orderdetail_set.objects.all())
-        return ordered_
+        return sum(detail.quantity for detail in self.orderdetail_set.objects.all())
 
     @property
     def is_available(self):
@@ -53,6 +49,11 @@ class Product(models):
 
 class Order(models):
     by_user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    @property
+    def can_be_fullfilled(self):
+        return all((detail.quantity <= detail.product.inventory_count
+                    for detail in self.orderdetail_set.all()))
 
 
 class OrderDetail(models):
